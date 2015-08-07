@@ -1,7 +1,9 @@
 package com.blu.es.camel.router;
 
+import com.blu.es.dto.QRNEvent;
+import com.blu.es.dto.TableObjectsDTO;
 import com.blu.es.dto.TableQrns;
-import com.blu.es.dto.UserObjectDTO;
+
 import com.blu.es.mapper.TableRowMapper;
 
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
@@ -13,14 +15,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowCallbackHandler;
+
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -28,13 +29,14 @@ import java.util.List;
  */
 public class MessageProcessor implements Processor{
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageProcessor.class);
-    private static final String SQL_METADATA= "select * from user_objects t where t.OBJECT_ID = ?";
     private static final String SQL_ROWID = "select * from ";
-    private static final String SQL_TABLE_DESC = "select *\n" +
-            "  from user_tab_columns\n" +
-            " where table_name = ?";
+
+    private static final String SQL_META_DATA="select uo.object_name, ut.column_name from user_tab_columns ut, user_objects uo\n"+
+            "  where uo.object_id = ?"+
+            "        and uo.OBJECT_NAME = ut.TABLE_NAME";
+    // TODO use google guauva
     private static final HashMap<Integer, String> TABLE_NAME_CACHE = new HashMap<Integer, String>();
-    private static final HashMap<String, List<String>> TABLE_COLUMNS = new HashMap<String, List<String>>();
+    private static final HashMap<String, List<String>> TABLE_META_DATA = new HashMap<String, List<String>>();
 
     @Autowired
     private JdbcTemplate oraJdbcTemplate;
@@ -66,25 +68,35 @@ public class MessageProcessor implements Processor{
         String tableName="";
         if(!TABLE_NAME_CACHE.isEmpty() && TABLE_NAME_CACHE.containsKey(Integer.valueOf(objectId))){
             tableName = TABLE_NAME_CACHE.get(Integer.valueOf(objectId));
-            // get table description
-
         }else{
-            // query the database table for getting table name by objectId
-            UserObjectDTO userObject = (UserObjectDTO) getOraJdbcTemplate().queryForObject(SQL_METADATA, new Object[]{objectId}, new TableRowMapper());
-            tableName = userObject.getObjectName();
-            TABLE_NAME_CACHE.put(Integer.valueOf(objectId), tableName);
-            // get table description
-            getOraJdbcTemplate().query(SQL_TABLE_DESC, new Object[]{tableName}, new RowCallbackHandler() {
-                @Override
-                public void processRow(ResultSet resultSet) throws SQLException {
-                    LOGGER.info("Column Name:"+ resultSet.getString(1)+ " DataType:"+ resultSet.getString(2));
+            // query the database table for getting table metadata by objectId
+            List<TableObjectsDTO> tableObjectsDTO = (List<TableObjectsDTO>)getOraJdbcTemplate().query(SQL_META_DATA, new Object[]{objectId}, new TableRowMapper());
+            tableName = tableObjectsDTO.get(0).getTableName();
+            TABLE_NAME_CACHE.put(objectId, tableName);
+            List<String> colNames = new ArrayList<String>();
+            tableObjectsDTO.forEach(
+                    p->{
+                        colNames.add(p.getColumnName());
+                    }
+            );
+            TABLE_META_DATA.put(tableName, colNames);
+        }
+
+        importToES(tableQrns, tableName);
+    }
+    private void importToES(TableQrns tableQrns, String tableName){
+        final String SQL_FOR_ROWID = SQL_ROWID+tableName+" where rowId=?";
+        if (tableQrns != null){
+            for(QRNEvent event :  tableQrns.getQrnEvent()){
+                List<Map<String, Object>> rows =  getOraJdbcTemplate().queryForList(SQL_FOR_ROWID,new Object[]{event.getRowId()});
+                for(Map row : rows){
+                    for(String colName : TABLE_META_DATA.get(tableName)){
+                        System.out.println(row.get(colName));
+                    }
 
                 }
-            });
-
+            }
         }
-        // TODO should be prepared statement
-        //final String SQL_FOR_ROWID = SQL_ROWID+tableName+" where rowId=?";
 
     }
 }
