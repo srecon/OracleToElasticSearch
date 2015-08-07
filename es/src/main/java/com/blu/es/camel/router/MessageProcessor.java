@@ -78,16 +78,11 @@ public class MessageProcessor implements Processor{
                 @Override
                 public void processRow(ResultSet resultSet) throws SQLException {
                     LOGGER.info("Column Name:"+ resultSet.getString(1)+ " DataType:"+ resultSet.getString(2));
-                    TABLE_COLUMNS.put("TEMP", new ArrayList<String>(){{resultSet.getString(1);}});
+
                 }
             });
 
         }
-        List<String> columns  =  TABLE_COLUMNS.get("TEMP");
-        for(String column : columns){
-            LOGGER.info("COLUMN NAME:" + column);
-        }
-
         // TODO should be prepared statement
         //final String SQL_FOR_ROWID = SQL_ROWID+tableName+" where rowId=?";
 
