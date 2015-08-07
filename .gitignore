@@ -1,0 +1,7 @@
+# Created by .ignore support plugin (hsz.mobi)
+target
+.idea
+tempfile.txt
+es/es.iml
+qrcn/qrcn.iml
+oracletoelasticsearch.iml

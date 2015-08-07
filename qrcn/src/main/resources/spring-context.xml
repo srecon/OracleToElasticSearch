@@ -1,0 +1,26 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+	http://www.springframework.org/schema/beans/spring-beans-2.5.xsd">
+
+    <bean id="mqProperties" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="location" value="classpath:connection.properties"/>
+        <property name="ignoreUnresolvablePlaceholders" value="true"/>
+    </bean>
+
+    <bean id="nsiConnection" class="com.blu.db.NsiOracleConnection">
+        <property name="userName" value="${username}"/>
+        <property name="password" value="${password}"/>
+        <property name="connectionString" value="${uri}"/>
+    </bean>
+    <bean id="consumer" class="com.blu.db.DBNotifactionConsumer">
+        <constructor-arg ref="nsiConnection"/>
+        <property name="queryString" value="${querystring}"/>
+        <property name="queueName" value="test"/>
+    </bean>
+    <bean id="mqConnectionFactory" class="com.blu.mq.MQConnectionFactory">
+        <property name="userName" value="admin"/>
+        <property name="password" value="password"/>
+        <property name="broker" value="tcp://192.168.24.72:61613"/>
+    </bean>
+</beans>
