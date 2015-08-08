@@ -6,9 +6,13 @@
 ### Version
 1.0-snapshot
 ### Prerequisites
-Oracle JDBC 11g driver needs to compile the project.
+>Oracle JDBC 11g driver needs to compile the project.
+>apache zookeeper
+>apache Apollo
+>elastic search
 
 ### Core functionalities
-* [oracledbnotification] - collect and send the notification of QRN to any existing queue.
-* [event-processor] - consumer, collects the message from the queue and start processing
+* [qrcn] - collect notification from Oracle and send the notifications to any existing queue [apollo].
+* [es] - consumer, collects the message from the queue and index in Elastic search
+* [es-dto] - common dto
 

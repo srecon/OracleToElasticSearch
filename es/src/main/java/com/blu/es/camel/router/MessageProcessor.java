@@ -6,11 +6,13 @@ import com.blu.es.dto.TableQrns;
 
 import com.blu.es.mapper.TableRowMapper;
 
+import com.blu.es.sandbox.ESClient;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.camel.Processor;
 
+import org.elasticsearch.action.index.IndexResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +39,9 @@ public class MessageProcessor implements Processor{
     // TODO use google guauva
     private static final HashMap<Integer, String> TABLE_NAME_CACHE = new HashMap<Integer, String>();
     private static final HashMap<String, List<String>> TABLE_META_DATA = new HashMap<String, List<String>>();
+    //private static XmlMapper xmlMapper = new XmlMapper();
+    @Autowired
+    private ESClient esClient;
 
     @Autowired
     private JdbcTemplate oraJdbcTemplate;
@@ -52,6 +57,7 @@ public class MessageProcessor implements Processor{
         return namedOraJdbcTemplate;
     }
 
+
     // Process Every Message
     @Override
     public void process(Exchange exchange) throws Exception {
@@ -60,7 +66,6 @@ public class MessageProcessor implements Processor{
 
         String msgBody = msg.getBody().toString();
         //LOGGER.info("Message:"+ msgBody);
-        // deserilized to object - unmarshal
         XmlMapper xmlMapper = new XmlMapper();
         TableQrns tableQrns = xmlMapper.readValue(msgBody, TableQrns.class);
         final int objectId = tableQrns.getObjectId();
@@ -86,17 +91,29 @@ public class MessageProcessor implements Processor{
     }
     private void importToES(TableQrns tableQrns, String tableName){
         final String SQL_FOR_ROWID = SQL_ROWID+tableName+" where rowId=?";
+        Map<String, Object> json = new HashMap<>();
+        //final String
         if (tableQrns != null){
+
             for(QRNEvent event :  tableQrns.getQrnEvent()){
                 List<Map<String, Object>> rows =  getOraJdbcTemplate().queryForList(SQL_FOR_ROWID,new Object[]{event.getRowId()});
                 for(Map row : rows){
                     for(String colName : TABLE_META_DATA.get(tableName)){
-                        System.out.println(row.get(colName));
+                        //System.out.println(row.get(colName));
+
+                        json.put(colName, row.get(colName));
                     }
 
                 }
+                json.put("rowId", event.getRowId());
+                json.put("operation", event.getOperationName());
+                // index to ES
+                IndexResponse response = esClient.getEsClient().prepareIndex(tableName.toLowerCase(), tableName.toLowerCase(), event.getRowId().toLowerCase()).setSource(json).execute().actionGet();
+                LOGGER.info("response:"+ response.getIndex());
             }
         }
+        // index to ES
+
 
     }
 }

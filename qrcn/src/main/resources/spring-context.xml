@@ -3,7 +3,7 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans
 	http://www.springframework.org/schema/beans/spring-beans-2.5.xsd">
 
-    <bean id="mqProperties" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+    <bean id="dbProperties" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
         <property name="location" value="classpath:connection.properties"/>
         <property name="ignoreUnresolvablePlaceholders" value="true"/>
     </bean>

@@ -7,14 +7,17 @@
 
     <context:annotation-config/>
 
-    <!--<bean id="thumbnailService" class="ru.atc.media.file.thumbnail.ThumbnailService"/>-->
+    <bean id="mqProperties" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="location" value="classpath:mq-connection.properties"/>
+        <property name="ignoreUnresolvablePlaceholders" value="true"/>
+    </bean>
+
     <bean id="maPreviewBuilderBean" class="com.blu.es.camel.router.ApolloConsumerBuilder"/>
     <bean id="messageProcessor" class="com.blu.es.camel.router.MessageProcessor"/>
-    <bean id="activemq"
-          class="org.apache.activemq.camel.component.ActiveMQComponent">
-        <property name="brokerURL" value="tcp://192.168.24.72:61613"/>
-        <property name="userName" value="admin"/>
-        <property name="password" value="password"/>
+    <bean id="activemq" class="org.apache.activemq.camel.component.ActiveMQComponent">
+        <property name="brokerURL" value="${mq.brokerurl}"/>
+        <property name="userName" value="${mq.username}"/>
+        <property name="password" value="${mq.password}"/>
     </bean>
 
     <camelContext id="camelContext-preview" xmlns="http://camel.apache.org/schema/spring">
@@ -22,10 +25,10 @@
     </camelContext>
     <!-- JDBC template-->
     <bean id="oraDS" class="com.mchange.v2.c3p0.ComboPooledDataSource">
-        <property name="driverClass" value="oracle.jdbc.driver.OracleDriver"/>
-        <property name="jdbcUrl" value="jdbc:oracle:thin:@sbrf-backbase-db.vps.at-consulting.ru:1521:DB11G"/>
-        <property name="user" value="dontdelete1"/>
-        <property name="password" value="dontdelete1"/>
+        <property name="driverClass" value="${db.driverclass}"/>
+        <property name="jdbcUrl" value="${db.jdbcurl}"/>
+        <property name="user" value="${db.user}"/>
+        <property name="password" value="${db.password}"/>
     </bean>
     <bean id="oraJdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
         <constructor-arg ref="oraDS"/>
@@ -35,5 +38,9 @@
     </bean>
     <bean id="oraTxMgr" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
         <property name="dataSource" ref="oraDS"/>
+    </bean>
+    <bean id="esClient" class="com.blu.es.sandbox.ESClient">
+        <constructor-arg name="host" value="${es.host}"/>
+        <constructor-arg name="port" value="${es.port}"/>
     </bean>
 </beans>
