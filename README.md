@@ -6,10 +6,10 @@
 ### Version
 1.0-snapshot
 ### Prerequisites
->Oracle JDBC 11g driver needs to compile the project.
->apache zookeeper
->apache Apollo
->elastic search
+* Oracle JDBC 11g driver needs to compile the project.
+* apache zookeeper
+* apache Apollo
+* elastic search
 
 ### Core functionalities
 * [qrcn] - collect notification from Oracle and send the notifications to any existing queue [apollo].
