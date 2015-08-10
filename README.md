@@ -18,3 +18,7 @@
 
 ### Data Flow
 ![alt tag](https://github.com/srecon/OracleToElasticSearch/blob/master/to%20ES.jpg)
+### Run
+* Start Zookeeper
+* run com.blu.curator.ExecuteClients
+* run com.blu.es.camel.router.Standalone
