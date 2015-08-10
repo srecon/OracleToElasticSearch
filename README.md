@@ -22,3 +22,9 @@
 * Start Zookeeper
 * run com.blu.curator.ExecuteClients
 * run com.blu.es.camel.router.Standalone
+
+### TODO
+* add fat jar to run QRCN
+* add fat jar to run es standalone
+* update data in ES by query operation
+* add google guava for cache
