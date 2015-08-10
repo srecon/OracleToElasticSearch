@@ -16,3 +16,5 @@
 * [es] - consumer, collects the message from the queue and index in Elastic search
 * [es-dto] - common dto
 
+### Data Flow
+![alt tag](https://github.com/srecon/OracleToElasticSearch/blob/master/to%20ES.jpg)
